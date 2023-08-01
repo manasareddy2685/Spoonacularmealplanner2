@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Spoonacularmealplanner"
+           tests="1"
+           failures="0"
+           errors="0"
+           skipped="0"
+           time="0.434">
+    <properties></properties>
+
+
+
+            <testcase
+                name="newShopping"
+                time="0.434"
+                classname="Tests.shoppingcarttest">
+            </testcase>
+</testsuite>

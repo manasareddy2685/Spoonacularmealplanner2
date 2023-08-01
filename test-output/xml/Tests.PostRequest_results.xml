@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Spoonacularmealplanner"
+           tests="1"
+           failures="0"
+           errors="0"
+           skipped="0"
+           time="1.919">
+    <properties></properties>
+
+
+
+            <testcase
+                name="newLogin"
+                time="1.919"
+                classname="Tests.PostRequest">
+            </testcase>
+</testsuite>

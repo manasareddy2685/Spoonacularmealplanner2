@@ -3,57 +3,83 @@ package Tests;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.testng.annotations.Test;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import static Tests.GsontoJSON.convertToJSON;
+import static org.testng.Assert.assertEquals;
 
 public class shoppingcarttest extends TestBase {
     @Test
-    public void newShopping() throws Exception {
-    String excelPath = "./shoppingcart.xlsx";
-    String sheetName = "sheet1";
+    public void newShopping() throws IOException {
+        Properties properties = loadProperties("config.properties");
+        String apiKey = properties.getProperty("api.key");
+        String apiUrl = properties.getProperty("api.url");
+        String browserPath = properties.getProperty("Browser");
 
+        // Set the Chrome driver path
+        System.setProperty("webdriver.chrome.driver", browserPath);
 
-    Object[][] tabularData = {
-            {73420, "Apple Or Peach Strudel", "https://spoonacular.com/recipeImages/73420-312x231.jpg", 0, 1.5, 150},
-            {632660, "Apricot Glazed Apple Tart", "https://spoonacular.com/recipeImages/632660-312x231.jpg", 3, 2, 200},
-            {8120,"Cereal","https://spoonacular.com/cdn/ingredients_100x100/rolled-oats.jpg",0, 3, 300},
-            {1089003,	"grannysmithapples","https://spoonacular.com/cdn/ingredients_100x100/grannysmith-apple.png", 11, 5, 500},
-    };
+        String excelFilePath = properties.getProperty("AbsolutePath") +"/shoppingcart.xlsx";
+        FileInputStream inputStream = new FileInputStream(excelFilePath);
 
-    JSONArray jsonArray = new JSONArray();
-    for (Object[] row : tabularData) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("ID", row[0]);
-        jsonObject.put("Title", row[1]);
-        jsonObject.put("Image", row[2]);
-        jsonObject.put("Likes", row[3]);
-        jsonObject.put("cups",row[4]);
-        jsonObject.put("gramsPerCup",row[5]);
-        jsonArray.put(jsonObject);
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        Sheet firstSheet = workbook.getSheetAt(0);
+        Iterator<Row> rowIterator = firstSheet.iterator();
+
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            Iterator<Cell> cellIterator = row.cellIterator();
+
+            while (cellIterator.hasNext()) {
+                Cell cell = cellIterator.next();
+                System.out.print(cell.toString() + " - ");
+            }
+            System.out.println();
+        }
+
+        workbook.close();
+        inputStream.close();
     }
-
-
-    System.out.println(jsonArray.toString());
-
-
-    String apiEndpoint = "https://api.spoonacular.com/users/connect"; // Replace with the actual API endpoint URL
-    makePostRequest(apiEndpoint, jsonArray.toString());
-
-
-}
-           static Response makePostRequest(String apiEndpoint, String jsonData) {
-         
-
-            Response response = RestAssured.given()
-                    .queryParam("x-apikey","806069c53fe041df99739b623fde7789")
-                    .contentType(ContentType.JSON)
-                    .and()
-                    .when()
-                    .post( "https://api.spoonacular.com/users/connect")
-                    .then()
-                    .extract().response();
-            return response;
-
+    public void PostRequests(String apiUrl, List<HashMap<String, Object>> json, String apiKey) {
+        for (HashMap<String, Object> newshopping : json) {
+            String requestObject = convertToJSON(newshopping);
+            Response response = postRequest(apiUrl, requestObject, apiKey);
+            System.out.println("Response Body: " + response.getBody().asString());
+            assertEquals(response.statusCode(), 200, "POST request should succeed.");
         }
     }
+
+    public static Response postRequest(String url, String requestBody, String apiKey) {
+        Response response = RestAssured.given()
+                .queryParam("apiKey", "your-api-key") // Replace with your API key
+                .contentType(ContentType.JSON)
+                .and()
+                .body(requestBody)
+                .when()
+                .post(url)
+                .then()
+                .extract().response();
+        return response;
+    }
+
+
+    private Properties loadProperties(String fileName) throws IOException {
+        Properties properties = new Properties();
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName)) {
+            if (inputStream == null) {
+                throw new FileNotFoundException("The " + fileName + " file does not exist in the specified location.");
+            }
+            properties.load(inputStream);
+        }
+        return properties;
+    }
+}

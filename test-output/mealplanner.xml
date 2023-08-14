@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="Default Suite">
     <test thread-count="5" name="Spoonacularmealplanner">
         <classes>
             <class name="Tests.PostRequest">
                 <methods>
-                    <include name="newLogin"/>
+                    <include name="newLoginTest"/>
                 </methods>
             </class>
             <class name="Tests.MealTemplate">
@@ -17,12 +17,23 @@
                 <methods>
                     <include name="newShopping"/>
                 </methods>
-
             </class>
-            <class name="Tests.WinePairing">
+
+            <class name="Tests.Ingredientavailability">
                 <methods>
-                <include name="testWineRecommendationForFood"/>
-            </methods>
+                    <include name="verifyIngredientsAvailability"/>
+                </methods>
+            </class>
+          <class name="Tests.AlternativeDishRecommendationTest">
+              <methods>
+                  <include name="testAlternativesAvailable"/>
+              </methods>
+          </class>
+
+            <class name="Tests.WineUsageTesting">
+                <methods>
+                    <include name="testWineUsageForWeekendPartyMeal"/>
+                </methods>
             </class>
         </classes>
     </test>

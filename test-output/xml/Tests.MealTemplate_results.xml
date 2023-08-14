@@ -4,14 +4,14 @@
            failures="0"
            errors="0"
            skipped="0"
-           time="0.267">
+           time="0.838">
     <properties></properties>
 
 
 
             <testcase
                 name="newMealItem"
-                time="0.267"
+                time="0.838"
                 classname="Tests.MealTemplate">
             </testcase>
 </testsuite>

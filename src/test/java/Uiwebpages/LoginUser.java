@@ -1,6 +1,8 @@
 package Uiwebpages;
 
-public class LoginUser {
+import java.util.HashMap;
+
+public class LoginUser extends HashMap<String, Object> {
     String username;
 
     String firstName;

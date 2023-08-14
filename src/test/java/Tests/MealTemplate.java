@@ -1,15 +1,19 @@
 package Tests;
-
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-
-import static Tests.GsontoJSON.convertToJSON;
-import static Tests.shoppingcarttest.makePostRequest;
+import java.util.Properties;
 import static io.restassured.RestAssured.given;
 import static org.testng.Assert.assertEquals;
 
@@ -18,78 +22,84 @@ public class MealTemplate extends TestBase {
     private String excelFilePath;
 
     @Test
+    public void newMealItem() throws IOException {
+        Properties properties = loadProperties("config.properties");
+        String apiKey = properties.getProperty("api.key");
+        String apiUrl = properties.getProperty("api.url");
+        String browserPath = properties.getProperty("Browser");
 
-    public void newMealItem() throws Exception {
+        // Set the Chrome driver path
+        System.setProperty("webdriver.chrome.driver", browserPath);
 
-        String excelPath = "./mealTemplate.xlsx";
-        String sheetName = "sheet1";
+        excelFilePath = properties.getProperty("AbsolutePath") + "/mealTemplate.xlsx";
+        FileInputStream inputStream = new FileInputStream(excelFilePath);
 
-        List<HashMap<String, Object>> mealItems = new ArrayList<>();
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        Sheet firstSheet = workbook.getSheetAt(0);
+        Iterator<Row> rowIterator = firstSheet.iterator();
 
-// Define the table data (Day, Slot, Position, Type, ID, Servings, BreakFast, Lunch, Dinner, Img)
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            Iterator<Cell> cellIterator = row.cellIterator();
 
-        Object[][] tabularData = {
-                {1, 1, 0, "Recipe", 716426, 3, "Cauliflower", "BrownRice", "Vegetable Fried Rice", "https://spoonacular.com/recipeImages/716426-312x231.jpg"},
-                {2, 1, 0, "Product", 715415, 3, "Red Lentil Soup", "Chicken", "Turnips", "https://spoonacular.com/recipeImages/715415-312x231.jpg"},
-                {3, 1, 0, "Menu Item", 716406, 3, "Asparagus", "Pea Soup", "Real Convenience Food", "https://spoonacular.com/recipeImages/716406-312x231.jpg"},
-                {4, 1, 0, "Custom Food", 782585, 3, "Cannellini Bean", "Asparagus Salad", "Mushrooms", "https://spoonacular.com/recipeImages/782585-312x231.jpg"},
-                {5, 1, 0, "Ingredients", 716429, 3, "Pasta with Garlic", "Scallions", "Cauliflower & Breadcrumbs", "https://spoonacular.com/recipeImages/716429-312x231.jpg"},
-                {6, 1, 0, "Non vegan", 795751, 3, "Chicken Fajita", "Stuffed Bell", "Pepper", "https://spoonacular.com/recipeImages/795751-312x231.jpg"},
-                {7, 1, 0, "Non vegan", 428278, 3, "Real Convenience Food", "Chicken", "Sterling Vineyards Merlot", "https://spoonacular.com/productImages/428278-312x231.jpg"},
-        };
-
-// Populate the mealItems list with data from the table
-        {
-            for (Object[] rowData : tabularData) {
-                HashMap<String, Object> mealItem = new HashMap<>();
-                mealItem.put("Day", rowData[0]);
-                mealItem.put("Slot", rowData[1]);
-                mealItem.put("Position", rowData[2]);
-                mealItem.put("Type", rowData[3]);
-                mealItem.put("ID", rowData[4]);
-                mealItem.put("Servings", rowData[5]);
-                mealItem.put("Breakfast", rowData[6]);
-                mealItem.put("Lunch", rowData[7]);
-                mealItem.put("Dinner", rowData[8]);
-                mealItem.put("Img", rowData[9]);
-                mealItems.add(mealItem);
+            while (cellIterator.hasNext()) {
+                Cell cell = cellIterator.next();
+                System.out.print(cell.toString() + " - ");
             }
-
-            System.out.println(mealItems.toString());
-
-            // Make the POST request with the JSON data
-            String apiEndpoint = "YOUR_API_ENDPOINT"; // Replace with the actual API endpoint URL
-            makePostRequest(apiEndpoint, mealItems.toString());
+            System.out.println();
         }
+
+        workbook.close();
+        inputStream.close();
     }
 
-        public void PostRequests (List < HashMap < String, Object >> json){
-            for (HashMap<String, Object> newMealItem : json) {
-                String requestObject = convertToJSON(newMealItem);
-                Response response = postRequest("https://api.spoonacular.com/users/connect", requestObject);
-                System.out.println("json-body post request is " + requestObject);
-                assertEquals(response.statusCode(), 200);
-            }
+    private List<HashMap<String, Object>> calculateNutrition(List<HashMap<String, Object>> mealItems) {
+        for (HashMap<String, Object> mealItem : mealItems) {
+            double protein = parseNutritionValue(mealItem.getOrDefault("Protein", "").toString());
+            double carbohydrates = parseNutritionValue(mealItem.getOrDefault("Carbohydrates", "").toString());
+            double fat = parseNutritionValue(mealItem.getOrDefault("Fat", "").toString());
+            double totalNutrition = protein + carbohydrates + fat;
+            mealItem.put("Total Nutrition", totalNutrition);
         }
+        return mealItems;
+    }
 
-        public static Response postRequest (String url, String requestBody){
-            String apikey = "d29bb4f76a5b4ce4bcdf46b52be7e810";
-            Response response = given()
-                    .contentType(ContentType.JSON)
-                    .header("Authorization", "806069c53fe041df99739b623fde7789")
-                    .queryParam("timeframe", "perDay")
-                    .and()
-                    .body(requestBody)
-                    .when()
-                    .post(url)
-                    .then()
-                    .extract().response();
-            return response;
-        }
+    private double parseNutritionValue(String value) {
+        String numericValue = value.replace("gms", "").trim();
+        return Double.parseDouble(numericValue);
     }
 
 
+    public void PostRequest(String apiUrl, List<HashMap<String, Object>> json, String apiKey) {
+        for (HashMap<String, Object> newMealItem : json) {
+            String requestObject = GsontoJSON.convertToJSON(newMealItem);
+            Response response = postRequest(apiUrl, requestObject);
+            System.out.println("Response Body: " + response.getBody().asString());
+            assertEquals(response.statusCode(), 200, "POST request should succeed.");
 
+        }
+    }
 
-
-
+    public static Response postRequest(String url, String requestBody) {
+        Response response = given()
+                .queryParam("apiKey", "your-api-key")
+                .contentType(ContentType.JSON)
+                .and()
+                .body(requestBody)
+                .when()
+                .post(url)
+                .then()
+                .extract().response();
+        return response;
+    }
+    private Properties loadProperties(String fileName) throws IOException {
+        Properties properties = new Properties();
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName)) {
+            if (inputStream == null) {
+                throw new IOException("The " + fileName + " file does not exist in the specified location.");
+            }
+            properties.load(inputStream);
+        }
+        return properties;
+    }
+}

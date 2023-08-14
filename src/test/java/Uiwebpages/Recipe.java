@@ -1,5 +1,7 @@
 package Uiwebpages;
 
+import java.util.List;
+
 public class Recipe {
     private int id;
     private int servings;
@@ -9,6 +11,8 @@ public class Recipe {
     private String dinner;
 
     private String lunch;
+    private String Ingredients;
+
     public int getId() {
         return id;
     }
@@ -54,7 +58,11 @@ public class Recipe {
     public  String getLunch(){return lunch;}
 
 
+    public List<String> getIngredients() { return getIngredients() ;}
+    public void setIngredients(String Ingredients) {
+        this.Ingredients = Ingredients;
     }
+}
 
 
 

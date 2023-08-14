@@ -1,34 +1,25 @@
 package Uiwebpages;
-
 public class winepairing {
+    private int day;
+    private int slot;
 
-        private String wine;
-        private boolean isPairingAvailable;
-
-        // Constructor
-        public winepairing(String wine) {
-            this.wine = wine;
-        }
-
-        // Getter for wine
-        public String getWine() {
-            return wine;
-        }
-
-        // Setter for wine
-        public void setWine(String wine) {
-            this.wine = wine;
-        }
-
-        // Getter for isPairingAvailable
-        public boolean isPairingAvailable() {
-            return isPairingAvailable;
-        }
-
-        // Setter for isPairingAvailable
-        public void setPairingAvailable(boolean pairingAvailable) {
-            isPairingAvailable = pairingAvailable;
-        }
+    public int getDay() {
+        return day;
     }
+
+    public int getSlot() {
+        return slot;
+    }
+
+    public void setDay(int day) {
+        this.day = day;
+    }
+
+    public void setSlot(int slot) {
+        this.slot = slot;
+    }
+
+}
+
 
 
